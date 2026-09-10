@@ -1,6 +1,6 @@
 # nvg-ins
 
-Isolated AGPL-3.0-only inertial-navigation service for NIGHTWATCH. It wraps the pinned public INSLIB `nav_suite` behind a bounded protobuf/nanopb Unix-domain socket. The permissively licensed main application exchanges measurements and navigation state only; no INSLIB source is linked into that process.
+Isolated AGPL-3.0-only inertial-navigation service for wearable cameras . It wraps the pinned public INSLIB `nav_suite` behind a bounded protobuf/nanopb Unix-domain socket. The permissively licensed main application exchanges measurements and navigation state only; no INSLIB source is linked into that process.
 
 ## Contract
 
@@ -61,7 +61,7 @@ service and is intentionally launched by integration tooling rather than CTest.
 
 ## Legal boundary
 
-This repository and the resulting `nvg-ins` executable are AGPL-3.0-only because they link INSLIB. The main NIGHTWATCH application is a separate process and communicates only through the published wire contract. Keep deployment source-offer and corresponding-source obligations with this service package. This boundary is an engineering packaging choice, not legal advice.
+This repository and the resulting `nvg-ins` executable are AGPL-3.0-only because they link INSLIB. The main wearable cameras  application is a separate process and communicates only through the published wire contract. Keep deployment source-offer and corresponding-source obligations with this service package. This boundary is an engineering packaging choice, not legal advice.
 
 ## Qualification status
 

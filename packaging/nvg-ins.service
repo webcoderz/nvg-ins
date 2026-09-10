@@ -1,5 +1,5 @@
 [Unit]
-Description=NIGHTWATCH isolated inertial navigation estimator
+Description=wearable cameras  isolated inertial navigation estimator
 After=local-fs.target
 Before=realtime-nvg.service
 
