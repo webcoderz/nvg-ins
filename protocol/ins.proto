@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package nvg.ins.v1;
+
+option optimize_for = LITE_RUNTIME;
+
+enum EstimatorMode {
+  ESTIMATOR_MODE_UNSPECIFIED = 0;
+  ESTIMATOR_MODE_NONE = 1;
+  ESTIMATOR_MODE_ATTITUDE_ONLY = 2;
+  ESTIMATOR_MODE_COASTING = 3;
+  ESTIMATOR_MODE_FULL = 4;
+}
+
+enum AidingMode {
+  AIDING_MODE_UNSPECIFIED = 0;
+  AIDING_MODE_NONE = 1;
+  AIDING_MODE_LOOSE = 2;
+  AIDING_MODE_TIGHT = 3;
+}
+
+message Vector3 { double x = 1; double y = 2; double z = 3; }
+message QuaternionWxyz { double w = 1; double x = 2; double y = 3; double z = 4; }
+
+message ImuSample {
+  uint64 capture_time_us = 1;
+  Vector3 specific_force_frd_mps2 = 2;
+  Vector3 angular_rate_frd_rad_s = 3;
+  string calibration_id = 4;
+  bool accelerometer_valid = 5;
+  bool gyroscope_valid = 6;
+  bool accelerometer_saturated = 7;
+  bool gyroscope_saturated = 8;
+}
+message GnssAiding {
+  uint64 capture_time_us = 1;
+  Vector3 position_ecef_m = 2;
+  Vector3 velocity_ned_mps = 3;
+  repeated double position_covariance_m2 = 4;
+  repeated double velocity_covariance_m2ps2 = 5;
+  string calibration_id = 6;
+  bool position_valid = 7;
+  bool velocity_valid = 8;
+}
+message PressureAiding {
+  uint64 capture_time_us = 1;
+  double pressure_pa = 2;
+  double pressure_sigma_pa = 3;
+  double altitude_sigma_m = 4;
+  string calibration_id = 5;
+  bool valid = 6;
+}
+message MagnetometerAiding {
+  uint64 capture_time_us = 1;
+  Vector3 magnetic_field_frd_ut = 2;
+  repeated double covariance_ut2 = 3;
+  string calibration_id = 4;
+  bool valid = 5;
+}
+message VioAiding {
+  uint64 capture_time_us = 1;
+  Vector3 position_ned_m = 2;
+  double yaw_rad = 3;
+  repeated double covariance = 4;
+  string calibration_id = 5;
+  string estimator_epoch = 6;
+  bool valid = 7;
+}
+message ZeroMotionAiding {
+  uint64 capture_time_us = 1;
+  bool zupt = 2;
+  bool zaru = 3;
+  double velocity_sigma_mps = 4;
+  double angular_rate_sigma_rad_s = 5;
+}
+message YawReferenceAiding {
+  uint64 capture_time_us = 1;
+  double yaw_rad = 2;
+  double yaw_sigma_rad = 3;
+  string reference = 4;
+  string calibration_id = 5;
+  bool valid = 6;
+}
+message EstimatorRequest {
+  uint32 protocol_version = 1;
+  string request_id = 2;
+  uint64 sequence = 3;
+  string estimator_session_id = 4;
+  string clock_epoch = 5;
+  string origin_epoch = 6;
+  repeated ImuSample imu_samples = 7;
+  GnssAiding gnss = 8;
+  PressureAiding pressure = 9;
+  MagnetometerAiding magnetometer = 10;
+  VioAiding vio = 11;
+  ZeroMotionAiding zero_motion = 12;
+  YawReferenceAiding yaw_reference = 13;
+  uint64 mapped_capture_monotonic_ns = 14;
+  uint64 mapped_capture_unix_ns = 15;
+  uint64 timing_uncertainty_ns = 16;
+  string calibration_hash = 17;
+}
+message EstimatorDiagnostics {
+  double last_gnss_position_residual_m = 1;
+  double maximum_gnss_position_residual_m = 2;
+  double last_gnss_velocity_residual_mps = 3;
+  uint64 rejected_measurements = 4;
+  uint64 downweighted_measurements = 5;
+  uint64 time_resets = 6;
+  uint64 overconfidence_events = 7;
+  uint64 skipped_samples = 8;
+}
+message EstimatorState {
+  uint32 protocol_version = 1;
+  string request_id = 2;
+  uint64 sequence = 3;
+  string estimator_session_id = 4;
+  string clock_epoch = 5;
+  string origin_epoch = 6;
+  uint64 state_capture_time_us = 7;
+  uint64 covariance_capture_time_us = 8;
+  Vector3 position_ned_m = 9;
+  Vector3 velocity_ned_mps = 10;
+  QuaternionWxyz orientation_body_to_ned = 11;
+  Vector3 accelerometer_bias_frd_mps2 = 12;
+  Vector3 gyroscope_bias_frd_rad_s = 13;
+  Vector3 magnetometer_bias_frd_ut = 14;
+  repeated string covariance_order = 15;
+  repeated double covariance = 16;
+  EstimatorMode estimator_mode = 17;
+  AidingMode aiding_mode = 18;
+  bool ready = 19;
+  EstimatorDiagnostics diagnostics = 20;
+  uint32 actual_output_hz = 21;
+  uint64 mapped_capture_monotonic_ns = 22;
+  uint64 mapped_capture_unix_ns = 23;
+  uint64 timing_uncertainty_ns = 24;
+  string calibration_hash = 25;
+}
+message Envelope {
+  oneof payload {
+    EstimatorRequest request = 1;
+    EstimatorState state = 2;
+  }
+}

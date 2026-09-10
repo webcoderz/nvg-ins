@@ -1,0 +1,6 @@
+[submodule "third_party/INSLIB"]
+	path = third_party/INSLIB
+	url = https://github.com/jnz/INSLIB.git
+[submodule "third_party/nanopb"]
+	path = third_party/nanopb
+	url = https://github.com/nanopb/nanopb.git

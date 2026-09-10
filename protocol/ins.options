@@ -1,0 +1,25 @@
+nvg.ins.v1.ImuSample.calibration_id max_size:65
+nvg.ins.v1.GnssAiding.position_covariance_m2 max_count:9 fixed_count:true
+nvg.ins.v1.GnssAiding.velocity_covariance_m2ps2 max_count:9 fixed_count:true
+nvg.ins.v1.GnssAiding.calibration_id max_size:65
+nvg.ins.v1.PressureAiding.calibration_id max_size:65
+nvg.ins.v1.MagnetometerAiding.covariance_ut2 max_count:9 fixed_count:true
+nvg.ins.v1.MagnetometerAiding.calibration_id max_size:65
+nvg.ins.v1.VioAiding.covariance max_count:16
+nvg.ins.v1.VioAiding.calibration_id max_size:65
+nvg.ins.v1.VioAiding.estimator_epoch max_size:65
+nvg.ins.v1.YawReferenceAiding.reference max_size:33
+nvg.ins.v1.YawReferenceAiding.calibration_id max_size:65
+nvg.ins.v1.EstimatorRequest.request_id max_size:65
+nvg.ins.v1.EstimatorRequest.estimator_session_id max_size:65
+nvg.ins.v1.EstimatorRequest.clock_epoch max_size:65
+nvg.ins.v1.EstimatorRequest.origin_epoch max_size:65
+nvg.ins.v1.EstimatorRequest.imu_samples max_count:64
+nvg.ins.v1.EstimatorRequest.calibration_hash max_size:65
+nvg.ins.v1.EstimatorState.request_id max_size:65
+nvg.ins.v1.EstimatorState.estimator_session_id max_size:65
+nvg.ins.v1.EstimatorState.clock_epoch max_size:65
+nvg.ins.v1.EstimatorState.origin_epoch max_size:65
+nvg.ins.v1.EstimatorState.covariance_order max_count:18 max_size:33
+nvg.ins.v1.EstimatorState.covariance max_count:324
+nvg.ins.v1.EstimatorState.calibration_hash max_size:65

@@ -1,0 +1,31 @@
+[Unit]
+Description=NIGHTWATCH isolated inertial navigation estimator
+After=local-fs.target
+Before=realtime-nvg.service
+
+[Service]
+Type=simple
+User=nvg
+Group=nvg
+RuntimeDirectory=nvg
+RuntimeDirectoryMode=0700
+ExecStart=/usr/bin/nvg-ins --socket /run/nvg/ins.sock
+Restart=on-failure
+RestartSec=1s
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
