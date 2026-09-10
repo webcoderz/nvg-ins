@@ -31,6 +31,34 @@ Pinned sources:
 
 Generated `ins.pb.c/.h` is checked in so the target build does not download or execute a generator. Regenerate it only with nanopb 0.4.9.1 and the checked-in `protocol/ins.options` bounds.
 
+## Run
+
+The service defaults to a private socket and a bounded 100 Hz output cadence:
+
+```sh
+nvg-ins --socket /run/nvg/ins.sock --output-hz 100
+```
+
+CPU affinity and FIFO scheduling are explicit deployment inputs. Use them only on
+a core reserved by the target profile; unsupported affinity or scheduler requests
+fail startup rather than silently degrading:
+
+```sh
+nvg-ins --socket /run/nvg/ins.sock --output-hz 100 --cpu 6 --sched fifo --priority 20
+```
+
+Offline qualification uses the same validation, estimator and protobuf framing path.
+Both files are concatenated big-endian-length-prefixed `Envelope` streams:
+
+```sh
+nvg-ins --replay requests.pbstream --output states.pbstream
+```
+
+`covariance-oracle` independently feeds the pinned upstream C API, obtains
+`ins_suite_get_covariance`, and compares every element against the service's
+row-major UDU reconstruction. `socket-smoke` exercises the actual private UDS
+service and is intentionally launched by integration tooling rather than CTest.
+
 ## Legal boundary
 
 This repository and the resulting `nvg-ins` executable are AGPL-3.0-only because they link INSLIB. The main NIGHTWATCH application is a separate process and communicates only through the published wire contract. Keep deployment source-offer and corresponding-source obligations with this service package. This boundary is an engineering packaging choice, not legal advice.
