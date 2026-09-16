@@ -2,10 +2,25 @@
 #include "ins_capi.h"
 
 #include <algorithm>
-#include <cassert>
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <cstdio>
 #include <string>
+
+// `assert` disappears under NDEBUG, which is exactly how these tests are built (Release), taking
+// the checks with it and leaving the variables they used unused -- which -Werror then refuses to
+// compile. A test that vanishes in the build everyone ships is not a test, so this one keeps its
+// checks in every configuration.
+#define CHECK(condition)                                                          \
+  do {                                                                            \
+    if (!(condition)) {                                                           \
+      std::fprintf(stderr, "%s:%d: check failed: %s\n", __FILE__, __LINE__,       \
+                   #condition);                                                   \
+      std::abort();                                                               \
+    }                                                                             \
+  } while (0)
+
 
 namespace {
 
@@ -63,16 +78,16 @@ int main() {
   std::string error;
 
   void* oracle = ins_suite_create();
-  assert(oracle != nullptr);
+  CHECK(oracle != nullptr);
   ins_cfg_t config{};
   config.time_us = 10'000;
   config.auto_init = 1;
-  assert(ins_suite_init(oracle, &config) == 0);
+  CHECK(ins_suite_init(oracle, &config) == 0);
 
   std::uint64_t previous_time_us = 0;
   for (std::uint64_t sequence = 1; sequence <= 10; ++sequence) {
     const auto input = request(sequence);
-    assert(estimator.process(input, state, error));
+    CHECK(estimator.process(input, state, error));
     for (pb_size_t index = 0; index < input.imu_samples_count; ++index) {
       const auto& sample = input.imu_samples[index];
       const auto dt = previous_time_us == 0
@@ -120,15 +135,15 @@ int main() {
 
   float expected[INS_CAPI_MAX_STATE * INS_CAPI_MAX_STATE]{};
   const int dimension = ins_suite_get_covariance(oracle, expected);
-  assert(dimension == static_cast<int>(state.covariance_order_count));
-  assert(state.covariance_count == static_cast<pb_size_t>(dimension * dimension));
+  CHECK(dimension == static_cast<int>(state.covariance_order_count));
+  CHECK(state.covariance_count == static_cast<pb_size_t>(dimension * dimension));
   for (int row = 0; row < dimension; ++row) {
     for (int column = 0; column < dimension; ++column) {
       const double actual = state.covariance[row * dimension + column];
       const double oracle_value = expected[row + column * INS_CAPI_MAX_STATE];
       const double tolerance =
           1e-6 * std::max({1.0, std::abs(actual), std::abs(oracle_value)});
-      assert(std::abs(actual - oracle_value) <= tolerance);
+      CHECK(std::abs(actual - oracle_value) <= tolerance);
     }
   }
   ins_suite_destroy(oracle);

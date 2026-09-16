@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <arpa/inet.h>
 #include <cerrno>
+#include <cmath>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -31,6 +32,8 @@ struct Options {
   std::string output_path;
   unsigned output_hz{100};
   int cpu{-1};
+  // 0 keeps INSLIB's default; negative means unlimited coasting.
+  double max_deadreckoning_sec{0.0};
   int policy{SCHED_OTHER};
   int priority{0};
 };
@@ -71,6 +74,15 @@ bool parse_options(int argc, char** argv, Options& options) {
       else return false;
     } else if (key == "--priority") {
       if (!parse_integer(value, 0, 99, options.priority)) return false;
+    } else if (key == "--max-deadreckoning-sec") {
+      char* end = nullptr;
+      errno = 0;
+      const double parsed = std::strtod(value, &end);
+      if (errno != 0 || end == value || *end != '\0' || !std::isfinite(parsed) ||
+          parsed > 86'400.0) {
+        return false;
+      }
+      options.max_deadreckoning_sec = parsed;
     } else {
       return false;
     }
@@ -170,8 +182,9 @@ void pace(std::uint64_t period_ns, std::uint64_t& previous_output_ns,
 }
 
 bool process_stream(int input_descriptor, int output_descriptor, unsigned output_hz,
-                    bool realtime) {
+                    bool realtime, float max_deadreckoning_sec) {
   nvg::ins::Estimator estimator;
+  estimator.set_max_deadreckoning_sec(max_deadreckoning_sec);
   std::uint8_t payload[kMaximumPayload]{};
   std::uint8_t encoded[kMaximumPayload]{};
   std::uint64_t previous_output_ns = 0;
@@ -228,7 +241,7 @@ int replay(const Options& options) {
     ::close(input);
     return 1;
   }
-  const bool success = process_stream(input, output, options.output_hz, false);
+  const bool success = process_stream(input, output, options.output_hz, false, static_cast<float>(options.max_deadreckoning_sec));
   ::close(output);
   ::close(input);
   return success ? 0 : 1;
@@ -267,7 +280,7 @@ int serve(const Options& options) {
       ::close(client);
       continue;
     }
-    if (!process_stream(client, client, options.output_hz, true)) {
+    if (!process_stream(client, client, options.output_hz, true, static_cast<float>(options.max_deadreckoning_sec))) {
       std::fprintf(stderr, "nvg-ins closed malformed client\n");
     }
     ::close(client);
