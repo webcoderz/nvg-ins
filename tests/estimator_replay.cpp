@@ -1,8 +1,23 @@
 #include "estimator.hpp"
 
-#include <cassert>
+#include <cstdio>
+#include <cstdlib>
 #include <cstdio>
 #include <string>
+
+// `assert` disappears under NDEBUG, which is exactly how these tests are built (Release), taking
+// the checks with it and leaving the variables they used unused -- which -Werror then refuses to
+// compile. A test that vanishes in the build everyone ships is not a test, so this one keeps its
+// checks in every configuration.
+#define CHECK(condition)                                                          \
+  do {                                                                            \
+    if (!(condition)) {                                                           \
+      std::fprintf(stderr, "%s:%d: check failed: %s\n", __FILE__, __LINE__,       \
+                   #condition);                                                   \
+      std::abort();                                                               \
+    }                                                                             \
+  } while (0)
+
 
 namespace {
 
@@ -58,22 +73,22 @@ int main() {
   std::string error;
 
   auto first = request(1, "clock-1");
-  assert(estimator.process(first, state, error));
-  assert(state.protocol_version == 1);
-  assert(state.sequence == 1);
-  assert(state.mapped_capture_monotonic_ns == first.mapped_capture_monotonic_ns);
-  assert(state.timing_uncertainty_ns == first.timing_uncertainty_ns);
-  assert(state.covariance_order_count == 15);
-  assert(state.covariance_count == 225);
-  assert(state.aiding_mode == nvg_ins_v1_AidingMode_AIDING_MODE_LOOSE);
+  CHECK(estimator.process(first, state, error));
+  CHECK(state.protocol_version == 1);
+  CHECK(state.sequence == 1);
+  CHECK(state.mapped_capture_monotonic_ns == first.mapped_capture_monotonic_ns);
+  CHECK(state.timing_uncertainty_ns == first.timing_uncertainty_ns);
+  CHECK(state.covariance_order_count == 15);
+  CHECK(state.covariance_count == 225);
+  CHECK(state.aiding_mode == nvg_ins_v1_AidingMode_AIDING_MODE_LOOSE);
 
   error.clear();
-  assert(!estimator.process(first, state, error));
-  assert(error == "request sequence is not strictly increasing");
+  CHECK(!estimator.process(first, state, error));
+  CHECK(error == "request sequence is not strictly increasing");
 
   auto reset = request(1, "clock-2");
   error.clear();
-  assert(estimator.process(reset, state, error));
-  assert(std::string(state.clock_epoch) == "clock-2");
+  CHECK(estimator.process(reset, state, error));
+  CHECK(std::string(state.clock_epoch) == "clock-2");
   return 0;
 }

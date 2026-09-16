@@ -174,6 +174,10 @@ bool Estimator::validate(const nvg_ins_v1_EstimatorRequest& request,
   return true;
 }
 
+void Estimator::set_max_deadreckoning_sec(float seconds) {
+  max_deadreckoning_sec_ = seconds;
+}
+
 bool Estimator::reset(const nvg_ins_v1_EstimatorRequest& request, std::string& error) {
   suite_ = {};
   ins_init_t init{};
@@ -191,6 +195,12 @@ bool Estimator::reset(const nvg_ins_v1_EstimatorRequest& request, std::string& e
                        ? request.gnss.position_ecef_m.z
                        : 0.0;
   options.auto_init = true;
+  // Stated, not inherited: see Estimator::set_max_deadreckoning_sec.
+  if (max_deadreckoning_sec_ < 0.0F) {
+    options.allow_unlimited_deadreckoning = true;
+  } else if (max_deadreckoning_sec_ > 0.0F) {
+    options.max_deadreckoning_sec = max_deadreckoning_sec_;
+  }
   if (nav_suite_init(&suite_, &init, &options) != 0) {
     error = "INSLIB initialization failed";
     return false;
